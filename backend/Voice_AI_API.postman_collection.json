@@ -1,0 +1,338 @@
+{
+    "info": {
+        "_postman_id": "voice-ai-backend-collection",
+        "name": "Voice AI Backend API",
+        "description": "Complete API collection for Voice AI Backend with RAG",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Health & Status",
+            "item": [
+                {
+                    "name": "Root",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5000/",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                ""
+                            ]
+                        },
+                        "description": "Get API information and status"
+                    }
+                },
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5000/health",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "Check if backend is healthy"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Documents",
+            "item": [
+                {
+                    "name": "Upload Documents (Multiple)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "files",
+                                    "type": "file",
+                                    "src": "",
+                                    "description": "Select multiple PDF or TXT files to upload"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "http://localhost:5000/api/documents/upload",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "api",
+                                "documents",
+                                "upload"
+                            ]
+                        },
+                        "description": "Upload multiple PDF or TXT documents for RAG ingestion. Each file is processed based on its type (PDF or TXT) automatically."
+                    }
+                },
+                {
+                    "name": "List Documents",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5000/api/documents",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "api",
+                                "documents"
+                            ]
+                        },
+                        "description": "Get list of all uploaded documents from ChromaDB"
+                    }
+                },
+                {
+                    "name": "Delete Document",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5000/api/documents/{{document_id}}",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "api",
+                                "documents",
+                                "{{document_id}}"
+                            ]
+                        },
+                        "description": "Delete a document by ID (replace {{document_id}} with actual ID)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Agent Configuration",
+            "item": [
+                {
+                    "name": "Get Current Prompt",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5000/api/agent/prompt",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "api",
+                                "agent",
+                                "prompt"
+                            ]
+                        },
+                        "description": "Get the current system prompt"
+                    }
+                },
+                {
+                    "name": "Update Prompt",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"prompt\": \"You are a helpful AI assistant with access to uploaded documents. Your role is to answer questions accurately based on the provided context. Be concise and cite your sources when using document information.\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:5000/api/agent/prompt",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "api",
+                                "agent",
+                                "prompt"
+                            ]
+                        },
+                        "description": "Update the system prompt (in-memory only)"
+                    }
+                },
+                {
+                    "name": "Reset Prompt to Default",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5000/api/agent/prompt/reset",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "api",
+                                "agent",
+                                "prompt",
+                                "reset"
+                            ]
+                        },
+                        "description": "Reset the prompt to default value"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "RAG Query (Testing)",
+            "item": [
+                {
+                    "name": "Test RAG Query",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"question\": \"What is Python?\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:5000/api/chat/query",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "api",
+                                "chat",
+                                "query"
+                            ]
+                        },
+                        "description": "Test RAG pipeline with a text query. TOP_K is set to 5 by default in backend config."
+                    }
+                },
+                {
+                    "name": "Simple RAG Query",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"question\": \"What are the key features of Python?\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:5000/api/chat/query/simple",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "api",
+                                "chat",
+                                "query",
+                                "simple"
+                            ]
+                        },
+                        "description": "Simplified query endpoint with plain JSON response"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "LiveKit",
+            "item": [
+                {
+                    "name": "Generate Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"room_name\": \"test-room\",\n  \"participant_name\": \"user-1\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:5000/api/livekit/token",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "api",
+                                "livekit",
+                                "token"
+                            ]
+                        },
+                        "description": "Generate a LiveKit access token for joining a room"
+                    }
+                },
+                {
+                    "name": "List Rooms",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5000/api/livekit/rooms",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "api",
+                                "livekit",
+                                "rooms"
+                            ]
+                        },
+                        "description": "List active LiveKit rooms (placeholder endpoint)"
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "document_id",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

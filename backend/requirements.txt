@@ -1,0 +1,26 @@
+# Core API
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Validation & config
+pydantic
+pydantic-settings
+python-dotenv
+
+# OpenAI (LLM + Realtime STT/TTS)
+openai
+
+# RAG / Docs
+langchain
+langchain-community
+chromadb
+pymupdf
+
+# LiveKit (WebRTC + agent)
+livekit
+livekit-agents
+livekit-plugins-openai
+
+# Utilities
+aiofiles
