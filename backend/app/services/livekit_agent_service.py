@@ -65,89 +65,91 @@ class LiveKitAgentService:
         realtime_model = openai.realtime.RealtimeModel(
             model=REALTIME_MODEL,
             voice=REALTIME_VOICE,
-            temperature=REALTIME_TEMPERATURE,
-            instructions=system_prompt
+            temperature=REALTIME_TEMPERATURE
         )
         
         logger.info(f"Initialized OpenAI Realtime model: {REALTIME_MODEL}")
         
-        # Create initial agent with system instructions
-        initial_agent = Agent(
-            instructions=system_prompt
-        )
-        
         # Create AgentSession with the realtime model
+        # For Realtime models, we pass them as the llm parameter
         session = AgentSession(
-            llm=realtime_model,
-            agent=initial_agent
+            llm=realtime_model
         )
         
         # Handle transcription events for RAG
         @session.on("user_input_transcribed")
-        async def on_user_input_transcribed(event):
+        def on_user_input_transcribed(event):
             """
             Called when user speech is transcribed
             
             Args:
                 event: UserInputTranscribedEvent containing transcript and metadata
             """
-            # Only process final transcriptions
-            if not event.is_final:
-                return
+            async def handle_transcription():
+                # Only process final transcriptions
+                if not event.is_final:
+                    return
+                    
+                user_text = event.transcript
                 
-            user_text = event.transcript
-            logger.info(f"User said: {user_text}")
+                # Skip empty or whitespace-only transcripts
+                if not user_text or not user_text.strip():
+                    return
+                    
+                logger.info(f"User said: {user_text}")
 
-            # Publish user transcript
-            await self._publish_data(ctx, {
-                "type": "user_transcript",
-                "text": user_text
-            })
-            
-            # Retrieve relevant context from documents
-            context_chunks = await self.retrieval_service.retrieve_context(
-                query=user_text,
-                top_k=RAG_TOP_K
-            )
-            
-            # Build per-turn RAG context message
-            if context_chunks:
-                context_str = "\n\n".join([
-                    f"[Source: {chunk['document_name']}]\n{chunk['text']}"
-                    for chunk in context_chunks
-                ])
-                rag_message = (
-                    f"{self._rag_context_prefix}\n"
-                    f"RELEVANT CONTEXT FROM DOCUMENTS:\n{context_str}\n\n"
-                    f"USER QUESTION: {user_text}\n"
-                    f"Use the context above to answer the question. "
-                    f"If the context doesn't contain relevant information, say so clearly."
-                )
-                logger.info(f"Retrieved {len(context_chunks)} relevant chunks")
-
-                # Publish RAG sources for frontend panel
+                # Publish user transcript
                 await self._publish_data(ctx, {
-                    "type": "rag_sources",
-                    "sources": [
-                        {
-                            "document_name": chunk["document_name"],
-                            "text": chunk["text"],
-                            "distance": chunk.get("distance")
-                        }
-                        for chunk in context_chunks
-                    ]
+                    "type": "user_transcript",
+                    "text": user_text
                 })
                 
-                # Add RAG context to the session
-                session.send_message(llm.ChatMessage(
-                    role="user",
-                    content=rag_message
-                ))
-            else:
-                logger.info("No relevant documents found")
+                # Retrieve relevant context from documents
+                context_chunks = await self.retrieval_service.retrieve_context(
+                    query=user_text,
+                    top_k=RAG_TOP_K
+                )
+                
+                # Build per-turn RAG context message
+                if context_chunks:
+                    context_str = "\n\n".join([
+                        f"[Source: {chunk['document_name']}]\n{chunk['text']}"
+                        for chunk in context_chunks
+                    ])
+                    rag_message = (
+                        f"{self._rag_context_prefix}\n"
+                        f"RELEVANT CONTEXT FROM DOCUMENTS:\n{context_str}\n\n"
+                        f"USER QUESTION: {user_text}\n"
+                        f"Use the context above to answer the question. "
+                        f"If the context doesn't contain relevant information, say so clearly."
+                    )
+                    logger.info(f"Retrieved {len(context_chunks)} relevant chunks")
+
+                    # Publish RAG sources for frontend panel
+                    await self._publish_data(ctx, {
+                        "type": "rag_sources",
+                        "sources": [
+                            {
+                                "document_name": chunk["document_name"],
+                                "text": chunk["text"],
+                                "distance": chunk.get("distance")
+                            }
+                            for chunk in context_chunks
+                        ]
+                    })
+                    
+                    # NOTE: For Realtime API, context injection works differently
+                    # The model uses the system instructions instead of per-turn context injection
+                    # RAG context is displayed in the frontend panel for user reference
+                else:
+                    logger.info("No relevant documents found")
+            
+            # Use asyncio.create_task to run the async handler
+            import asyncio
+            asyncio.create_task(handle_transcription())
 
         @session.on("speech_created")
-        async def on_speech_created(event):
+        def on_speech_created(event):
             """Called when agent speech is created."""
             # The speech_created event is emitted when agent starts speaking
             # We'll log this but the actual speech text comes from the TTS stream
@@ -155,12 +157,17 @@ class LiveKitAgentService:
             
 
         @session.on("error")
-        async def on_session_error(err: Exception):
+        def on_session_error(err: Exception):
             logger.error(f"Agent session error: {err}")
         
-        # Start the session
+        # Create the agent with system instructions
+        agent = Agent(
+            instructions=system_prompt
+        )
+        
+        # Start the session with both room and agent
         logger.info("Starting agent session...")
-        await session.start(ctx.room)
+        await session.start(room=ctx.room, agent=agent)
 
 
 # Create service function for LiveKit worker
